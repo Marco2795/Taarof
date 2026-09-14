@@ -1,0 +1,42 @@
+const mongoose = require('mongoose');
+
+const UserSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    password: { type: String }, // not required for Google-auth users
+    googleId: { type: String },
+    authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
+
+    age: { type: Number, min: 18, max: 120 },
+    gender: { type: String, enum: ['male', 'female', 'nonbinary', 'other'] },
+    interestedIn: { type: String, enum: ['male', 'female', 'everyone'], default: 'everyone' },
+    bio: { type: String, maxlength: 500, default: '' },
+    location: { type: String, default: '' },
+    photoURL: { type: String, default: '' },
+
+    onboardingComplete: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: false },
+    lastSeen: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
+UserSchema.methods.toPublicJSON = function () {
+  return {
+    id: this._id,
+    name: this.name,
+    age: this.age,
+    gender: this.gender,
+    interestedIn: this.interestedIn,
+    bio: this.bio,
+    location: this.location,
+    photoURL: this.photoURL,
+    isActive: this.isActive,
+    lastSeen: this.lastSeen,
+    onboardingComplete: this.onboardingComplete,
+    createdAt: this.createdAt,
+  };
+};
+
+module.exports = mongoose.model('User', UserSchema);

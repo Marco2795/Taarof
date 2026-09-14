@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-dune-50 text-dune-900;
+}
+
+.btn-primary {
+  @apply bg-taarof-500 hover:bg-taarof-600 text-white font-semibold rounded-xl px-5 py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply bg-white border border-taarof-200 text-taarof-600 hover:bg-taarof-50 font-semibold rounded-xl px-5 py-3 transition-colors;
+}
+
+.input-field {
+  @apply w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-taarof-400 focus:border-transparent;
+}
+
+.card {
+  @apply bg-white rounded-2xl shadow-sm border border-gray-100;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in 0.25s ease-out;
+}

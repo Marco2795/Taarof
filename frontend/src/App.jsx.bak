@@ -1,0 +1,82 @@
+import React from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
+import Navbar from './components/Navbar';
+
+import Landing from './pages/Landing';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Onboarding from './pages/Onboarding';
+import Directory from './pages/Directory';
+import Inbox from './pages/Inbox';
+import Chat from './pages/Chat';
+import Settings from './pages/Settings';
+
+function ProtectedRoute({ children, requireOnboarded = true }) {
+  const { user, loading, onboardingComplete } = useAuth();
+  if (loading) return <p className="text-center py-16 text-dune-900/40">Loading Taarof…</p>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (requireOnboarded && !onboardingComplete) return <Navigate to="/onboarding" replace />;
+  return children;
+}
+
+export default function App() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <p className="text-center py-24 text-dune-900/40">Loading Taarof…</p>;
+  }
+
+  return (
+    <SocketProvider>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={user ? <Navigate to="/directory" replace /> : <Landing />} />
+        <Route path="/login" element={user ? <Navigate to="/directory" replace /> : <Login />} />
+        <Route path="/signup" element={user ? <Navigate to="/directory" replace /> : <Signup />} />
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute requireOnboarded={false}>
+              <Onboarding />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/directory"
+          element={
+            <ProtectedRoute>
+              <Directory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/inbox"
+          element={
+            <ProtectedRoute>
+              <Inbox />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat/:userId"
+          element={
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </SocketProvider>
+  );
+}
