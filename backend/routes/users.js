@@ -18,7 +18,6 @@ router.put('/me', requireAuth, async (req, res) => {
     if (bio !== undefined) update.bio = bio;
     if (location !== undefined) update.location = location;
 
-    // Mark onboarding complete once the essentials are present
     const existing = await User.findById(req.userId);
     const willHave = { ...existing.toObject(), ...update };
     if (willHave.name && willHave.age && willHave.gender && willHave.location) {
@@ -71,4 +70,25 @@ router.get('/', requireAuth, async (req, res) => {
     }
     if (location) query.location = { $regex: location, $options: 'i' };
     if (gender) query.gender = gender;
-    if (search) query.name = { $regex: search,
+    if (search) query.name = { $regex: search, $options: 'i' };
+
+    const users = await User.find(query).sort({ lastSeen: -1 }).limit(200);
+    res.json({ users: users.map((u) => u.toPublicJSON()) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load directory' });
+  }
+});
+
+// ---------- Single profile view ----------
+router.get('/:id', requireAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ user: user.toPublicJSON() });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load profile' });
+  }
+});
+
+module.exports = router;
