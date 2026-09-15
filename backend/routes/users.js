@@ -1,5 +1,6 @@
 const express = require('express');
 const User = require('../models/User');
+const Message = require('../models/Message');
 const requireAuth = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
@@ -45,6 +46,18 @@ router.post('/me/photo', requireAuth, upload.single('photo'), async (req, res) =
   }
 });
 
+// ---------- Delete my account ----------
+router.delete('/me', requireAuth, async (req, res) => {
+  try {
+    await Message.deleteMany({ $or: [{ sender: req.userId }, { receiver: req.userId }] });
+    await User.findByIdAndDelete(req.userId);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+});
+
 // ---------- Directory / discovery feed with filters ----------
 router.get('/', requireAuth, async (req, res) => {
   try {
@@ -58,25 +71,4 @@ router.get('/', requireAuth, async (req, res) => {
     }
     if (location) query.location = { $regex: location, $options: 'i' };
     if (gender) query.gender = gender;
-    if (search) query.name = { $regex: search, $options: 'i' };
-
-    const users = await User.find(query).sort({ lastSeen: -1 }).limit(200);
-    res.json({ users: users.map((u) => u.toPublicJSON()) });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to load directory' });
-  }
-});
-
-// ---------- Single profile view ----------
-router.get('/:id', requireAuth, async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({ user: user.toPublicJSON() });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to load profile' });
-  }
-});
-
-module.exports = router;
+    if (search) query.name = { $regex: search,
