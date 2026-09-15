@@ -63,6 +63,11 @@ export function AuthProvider({ children }) {
     setOnboardingComplete(false);
   }
 
+  async function deleteAccount() {
+    await api.delete('/users/me');
+    logout();
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -75,6 +80,7 @@ export function AuthProvider({ children }) {
         logout,
         updateUser,
         setOnboardingComplete,
+        deleteAccount,
       }}
     >
       {children}
