@@ -4,7 +4,7 @@ import api, { assetUrl } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
 export default function Settings() {
-  const { user, updateUser, logout } = useAuth();
+  const { user, updateUser, logout, deleteAccount } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: user?.name || '',
@@ -16,6 +16,9 @@ export default function Settings() {
   const [message, setMessage] = useState('');
   const [photoPreview, setPhotoPreview] = useState('');
   const [photoFile, setPhotoFile] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteText, setDeleteText] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   function set(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -52,6 +55,17 @@ export default function Settings() {
       setMessage(err.response?.data?.error || 'Failed to save changes');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    try {
+      await deleteAccount();
+      navigate('/');
+    } catch (err) {
+      setMessage(err.response?.data?.error || 'Failed to delete account');
+      setDeleting(false);
     }
   }
 
@@ -130,6 +144,52 @@ export default function Settings() {
       >
         Log out
       </button>
+
+      <div className="card p-6 mt-6 border border-red-200">
+        <h2 className="text-lg font-bold text-red-600 mb-2">Danger zone</h2>
+        <p className="text-sm text-dune-900/60 mb-4">
+          Deleting your account permanently removes your profile and all your messages. This cannot be undone.
+        </p>
+
+        {!showDeleteConfirm ? (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="w-full py-2 rounded-lg border border-red-500 text-red-600 font-medium hover:bg-red-50"
+          >
+            Delete my account
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-dune-900/70">
+              Type <span className="font-bold">DELETE</span> to confirm.
+            </p>
+            <input
+              className="input-field"
+              value={deleteText}
+              onChange={(e) => setDeleteText(e.target.value)}
+              placeholder="DELETE"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDeleteText('');
+                }}
+                className="btn-secondary flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteText !== 'DELETE' || deleting}
+                className="flex-1 py-2 rounded-lg bg-red-600 text-white font-medium disabled:opacity-40"
+              >
+                {deleting ? 'Deleting…' : 'Confirm delete'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
